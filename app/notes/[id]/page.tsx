@@ -1,28 +1,30 @@
+// app/notes/[id]/page.tsx
+'use client';
+
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { fetchNoteById } from '../../../lib/api';
 import NoteDetailsClient from './NoteDetails.client';
-import { notFound } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-interface PageProps {
-  params: Promise<{ id: string }>;
+interface NoteDetailsModalProps {
+  id: string;
 }
 
-const NoteDetailsPage = async ({ params }: PageProps) => {
-  const { id } = await params;
-  if (!id) return notFound();
+export default function NoteDetailsPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [queryClient] = useState(() => new QueryClient());
 
-  const queryClient = new QueryClient();
+  const from = searchParams.get('from') || '/notes/filter/All';
 
-  await queryClient.prefetchQuery({
-    queryKey: ['note', id],
-    queryFn: () => fetchNoteById(id),
-  });
+  const handleClose = () => {
+    router.push(from);
+  };
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <NoteDetailsClient id={id} />
+      <NoteDetailsClient id={params.id} onClose={handleClose} />
     </HydrationBoundary>
   );
-};
-
-export default NoteDetailsPage;
+}

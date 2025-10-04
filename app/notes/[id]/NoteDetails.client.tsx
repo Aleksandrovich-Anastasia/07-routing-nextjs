@@ -10,10 +10,12 @@ import {
 } from '@tanstack/react-query';
 import { fetchNoteById } from '../../../lib/api';
 import type { Note } from '../../../types/note';
+import Modal from '@/components/Modal/Modal';
 import css from './NoteDetails.module.css';
 
 interface NoteDetailsClientProps {
   id: string;
+  onClose: () => void;
   dehydratedState?: DehydratedState | null;
 }
 
@@ -42,13 +44,15 @@ const NoteDetailsInner = ({ id }: { id: string }) => {
   );
 };
 
-const NoteDetailsClient = ({ id, dehydratedState }: NoteDetailsClientProps) => {
+const NoteDetailsClient = ({ id, onClose, dehydratedState }: NoteDetailsClientProps) => {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
     <QueryClientProvider client={queryClient}>
       <HydrationBoundary state={dehydratedState ?? undefined}>
-        <NoteDetailsInner id={id} />
+        <Modal onClose={onClose}> {/* ⚡ обгортаємо в Modal */}
+          <NoteDetailsInner id={id} />
+        </Modal>
       </HydrationBoundary>
     </QueryClientProvider>
   );
