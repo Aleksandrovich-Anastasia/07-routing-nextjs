@@ -1,10 +1,25 @@
+import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
+import { getQueryClient } from '@/lib/queryClient';
+import { fetchNotes } from '@/lib/api';
+
 import NotesClient from './Notes.client';
 import SidebarNotes from '../@sidebar/SidebarNotes';
 import css from './NotesPage.module.css';
 
-export default async function NotesPage({ params }: { params: Promise<{ slug?: string[] }> }) {
-  const resolvedParams = await params; 
+export default async function NotesPage({
+  params,
+}: {
+  params: Promise<{ slug?: string[] }>;
+}) {
+  const resolvedParams = await params;
   const tag = resolvedParams.slug?.[0] || 'All';
+
+  const queryClient = getQueryClient();
+
+  await queryClient.prefetchQuery({
+    queryKey: ['notes', { tag }],
+    queryFn: () => fetchNotes({ tag }),
+  });
 
   return (
     <div className={css.pageContainer}>
@@ -12,7 +27,9 @@ export default async function NotesPage({ params }: { params: Promise<{ slug?: s
         <SidebarNotes />
       </aside>
       <main className={css.mainContent}>
-        <NotesClient tag={tag} />
+        <HydrationBoundary state={dehydrate(queryClient)}>
+          <NotesClient tag={tag} />
+        </HydrationBoundary>
       </main>
     </div>
   );

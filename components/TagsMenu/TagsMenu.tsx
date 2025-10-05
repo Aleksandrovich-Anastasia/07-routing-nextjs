@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import css from './TagsMenu.module.css';
 
-const TAGS = ['All', 'Work', 'Personal', 'Ideas', 'Archive'];
+const TAGS = ['All', 'Work', 'Personal', 'Todo', 'Meeting', 'Shopping'];
 
 const TagsMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +11,7 @@ const TagsMenu = () => {
 
   useEffect(() => setMounted(true), []);
 
-  if (!mounted) return null; // поки компонент не на клієнті — нічого не рендеримо
+  if (!mounted) return null;
 
   const toggleMenu = () => setIsOpen(prev => !prev);
 
@@ -26,7 +26,7 @@ const TagsMenu = () => {
           {TAGS.map(tag => (
             <li key={tag} className={css.menuItem}>
               <Link
-                href={tag === 'All' ? '/notes/filter' : `/notes/filter/${tag}`}
+                href={`/notes/filter/${tag}`}
                 className={css.menuLink}
                 onClick={() => setIsOpen(false)}
               >

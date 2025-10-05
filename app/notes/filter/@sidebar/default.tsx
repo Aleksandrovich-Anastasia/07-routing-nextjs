@@ -1,9 +1,24 @@
-import { ReactNode } from 'react';
+'use client';
 
-interface SidebarProps {
-  children?: ReactNode;
-}
+import Link from 'next/link';
+import css from './SidebarNotes.module.css';
 
-export default function Sidebar({ children }: SidebarProps) {
-  return <aside className="sidebar">{children}</aside>;
+const TAGS = ['All', 'Work', 'Personal', 'Todo', 'Meeting', 'Shopping', 'Ideas', 'Archive'];
+
+export default function Sidebar() {
+  return (
+    <aside className={css.sidebar}>
+      <nav>
+        <ul className={css.tagList}>
+          {TAGS.map((tag) => (
+            <li key={tag} className={css.tagItem}>
+              <Link href={`/notes/filter/${tag}`} className={css.tagLink}>
+                {tag}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </aside>
+  );
 }

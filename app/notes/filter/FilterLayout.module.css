@@ -1,0 +1,16 @@
+.container {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 16px;
+}
+
+.sidebar {
+  width: 280px;
+  min-width: 200px;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+}

@@ -1,30 +1,31 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { getQueryClient } from '@/lib/queryClient';
 import { fetchNoteById } from '@/lib/api';
-import type { Note } from '@/types/note';
+import NoteModalClient from '../[id]/NotePreview.client';
 
 interface NoteModalProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export default function NoteModal({ params }: NoteModalProps) {
-  const [note, setNote] = useState<Note | null>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    fetchNoteById(params.id).then(setNote);
-  }, [params.id]);
-
-  if (!note) return <div>Loading...</div>;
-
+export default async function NoteModal({ params }: NoteModalProps) {
+  // Await the params as it's now a Promise
+  const { id } = await params;
+  
+  // Get query client instance
+  const queryClient = getQueryClient();
+  
+  // Prefetch the note data on the server
+  await queryClient.prefetchQuery({
+    queryKey: ['note', id],
+    queryFn: () => fetchNoteById(id),
+  });
+  
+  // Dehydrate the state for client hydration
+  const dehydratedState = dehydrate(queryClient);
+  
   return (
-    <div className="modal-overlay" onClick={() => router.back()}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <h2>{note.title}</h2>
-        <p>{note.content}</p>
-      </div>
-    </div>
+    <HydrationBoundary state={dehydratedState}>
+      <NoteModalClient id={id} />
+    </HydrationBoundary>
   );
 }
