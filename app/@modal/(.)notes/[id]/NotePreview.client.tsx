@@ -13,18 +13,17 @@ interface NotePreviewProps {
 export default function NotePreview({ id }: NotePreviewProps) {
   const router = useRouter();
   
-  // Use React Query's useQuery hook with refetchOnMount option
   const { data: note, isLoading, isError, error } = useQuery<Note>({
     queryKey: ['note', id],
     queryFn: () => fetchNoteById(id),
-    refetchOnMount: false, // Don't refetch if data is already cached
+    refetchOnMount: false, 
   });
 
   const handleClose = () => {
     router.back();
   };
 
-  // Handle loading state
+
   if (isLoading) {
     return (
       <Modal onClose={handleClose} showCloseButton>

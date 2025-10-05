@@ -1,50 +1,64 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { fetchNotes } from "@/lib/api";
 import type { FetchNotesResponse } from "@/lib/api";
 
-export default function NotesListClient() {
+interface NotesListClientProps {
+  tag?: string; // Проп для фільтрації по тегу
+}
+
+export default function NotesListClient({ tag }: NotesListClientProps) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(search);
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value;
-    setSearch(value);
-    setTimeout(() => setDebouncedSearch(value), 400);
-    setPage(1);
-  }
+  // Дебаунс для пошуку
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-  const { data, isLoading, isError, error } = useQuery<FetchNotesResponse>({
-    queryKey: ["notes", page, debouncedSearch],
-    queryFn: () => fetchNotes({ page, perPage: 5, search: debouncedSearch }),
-    placeholderData: keepPreviousData,
-  });
+ const { data, isLoading, isError, error } = useQuery<FetchNotesResponse, Error>({
+  queryKey: ["notes", page, debouncedSearch, tag],
+  queryFn: () => fetchNotes({ page, perPage: 5, search: debouncedSearch, tag }),
+});
+
 
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error: {(error as Error).message}</p>;
 
   return (
     <div>
+      {/* Пошук */}
       <input
         type="text"
         value={search}
-        onChange={handleSearchChange}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
         placeholder="Search notes..."
         className="border px-2 py-1 mb-4"
       />
 
+      {/* Список нотаток */}
       <ul>
         {data?.notes.map((note) => (
           <li key={note.id} className="border-b py-2">
             <h3 className="font-bold">{note.title}</h3>
             <p>{note.content}</p>
+            {note.tag && (
+              <span className="inline-block bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded">
+                {note.tag}
+              </span>
+            )}
           </li>
         ))}
       </ul>
 
+      {/* Пагінація */}
       <div className="flex gap-2 mt-4">
         <button
           disabled={page === 1}

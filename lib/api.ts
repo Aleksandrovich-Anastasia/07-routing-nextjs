@@ -26,21 +26,21 @@ const api = axios.create({
 export const fetchNotes = async (
   params: FetchNotesParams = {}
 ): Promise<FetchNotesResponse> => {
-  const response = await api.get<FetchNotesResponse>('/', { params });
+  const response = await api.get<FetchNotesResponse>('/api/notes', { params });
   return response.data;
 };
 
 export const fetchNoteById = async (id: string): Promise<Note> => {
-  const response = await api.get<Note>(`/${id}`);
+  const response = await api.get<Note>(`/api/notes/${id}`);
   return response.data;
 };
 
 export const createNote = async (note: Partial<Note>): Promise<Note> => {
-  const response = await api.post<Note>('/', note);
+  const response = await api.post<Note>('/api/notes', note);
   return response.data;
 };
 
 export const deleteNote = async (id: string): Promise<Note> => {
-  const response = await api.delete<Note>(`/${id}`);
+  const response = await api.delete<Note>(`/api/notes/${id}`);
   return response.data;
 };
