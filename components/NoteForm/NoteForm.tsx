@@ -6,9 +6,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NoteFormValues } from '@/types/noteForm';
 import { createNote } from '../../lib/api';
 import css from './NoteForm.module.css';
+import type { Note } from '@/types/note';
 
 interface NoteFormProps {
   onClose: () => void;
+  onSubmit: (note: Partial<Note>) => void;
+  isLoading: boolean;
 }
 
 const NoteFormSchema = Yup.object().shape({

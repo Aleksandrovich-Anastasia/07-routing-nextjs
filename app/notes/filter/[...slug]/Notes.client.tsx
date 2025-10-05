@@ -1,83 +1,74 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { fetchNotes } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchNotes, createNote } from "@/lib/api";
 import type { FetchNotesResponse } from "@/lib/api";
+import type { Note } from '@/types/note';
+
+import SearchBox from "@/components/SearchBox/SearchBox";
+import Pagination from "@/components/Pagination/Pagination";
+import Modal from "@/components/Modal/Modal";
+import NoteForm from "@/components/NoteForm/NoteForm";
+import NoteList from "@/components/NoteList/NoteList";
 
 interface NotesListClientProps {
-  tag?: string; // Проп для фільтрації по тегу
+  tag?: string;
 }
 
 export default function NotesListClient({ tag }: NotesListClientProps) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Дебаунс для пошуку
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(timer);
   }, [search]);
 
- const { data, isLoading, isError, error } = useQuery<FetchNotesResponse, Error>({
-  queryKey: ["notes", page, debouncedSearch, tag],
-  queryFn: () => fetchNotes({ page, perPage: 5, search: debouncedSearch, tag }),
-});
+  const { data, isLoading, isError, error } =
+    useQuery<FetchNotesResponse, Error>({
+      queryKey: ["notes", page, debouncedSearch, tag],
+      queryFn: () =>
+        fetchNotes({ page, perPage: 5, search: debouncedSearch, tag }),
+    });
 
+  const mutation = useMutation({
+    mutationFn: (note: Partial<Note>) => createNote(note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      setIsModalOpen(false);
+    },
+  });
 
   if (isLoading) return <p>Loading...</p>;
-  if (isError) return <p>Error: {(error as Error).message}</p>;
+  if (isError) return <p>Error: {error.message}</p>;
 
   return (
     <div>
-      {/* Пошук */}
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setPage(1);
-        }}
-        placeholder="Search notes..."
-        className="border px-2 py-1 mb-4"
-      />
+      <SearchBox value={search} onChange={val => { setSearch(val); setPage(1); }} />
 
-      {/* Список нотаток */}
-      <ul>
-        {data?.notes.map((note) => (
-          <li key={note.id} className="border-b py-2">
-            <h3 className="font-bold">{note.title}</h3>
-            <p>{note.content}</p>
-            {note.tag && (
-              <span className="inline-block bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded">
-                {note.tag}
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
+      <button onClick={() => setIsModalOpen(true)} className="mb-4 px-3 py-1 border rounded">
+        + Add note
+      </button>
 
-      {/* Пагінація */}
-      <div className="flex gap-2 mt-4">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage((prev) => prev - 1)}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          Prev
-        </button>
-        <span>
-          Page {page} of {data?.totalPages ?? 1}
-        </span>
-        <button
-          disabled={page === data?.totalPages}
-          onClick={() => setPage((prev) => prev + 1)}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+      <NoteList notes={data?.notes ?? []} />
+
+      <Pagination page={page} totalPages={data?.totalPages ?? 1} onPageChange={setPage} />
+
+      {isModalOpen && (
+      <Modal onClose={() => setIsModalOpen(false)}>
+       <NoteForm
+         onSubmit={(note) => mutation.mutate(note)}
+         isLoading={mutation.isPending}
+         onClose={() => setIsModalOpen(false)}
+        />
+      </Modal>
+
+      )}
     </div>
   );
 }

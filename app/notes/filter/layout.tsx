@@ -1,16 +1,16 @@
 import { ReactNode } from 'react';
-import SidebarNotes from '../filter/@sidebar/SidebarNotes';
 import css from './FilterLayout.module.css';
 
 interface FilterLayoutProps {
   children: ReactNode;
+  sidebar: ReactNode; 
 }
 
-export default function FilterLayout({ children }: FilterLayoutProps) {
+export default function FilterLayout({ children, sidebar }: FilterLayoutProps) {
   return (
     <div className={css.container}>
       <aside className={css.sidebar}>
-        <SidebarNotes />
+        {sidebar} {/* рендеримо проп */}
       </aside>
       <main className={css.main}>{children}</main>
     </div>
