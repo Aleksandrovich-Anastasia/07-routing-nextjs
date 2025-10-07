@@ -12,7 +12,8 @@ export default async function NotesPage({
   params: Promise<{ slug?: string[] }>;
 }) {
   const resolvedParams = await params;
-  const tag = resolvedParams.slug?.[0] || 'All';
+
+  const tag = resolvedParams.slug?.[0] !== 'All' ? resolvedParams.slug?.[0] : undefined;
 
   const queryClient = getQueryClient();
 
